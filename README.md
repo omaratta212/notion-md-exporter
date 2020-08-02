@@ -1,4 +1,4 @@
-# Notion .md exporter
+# Notion .md exporter (WORK-IN-PROGRESS)
 
 A small node.js script to export nested notion.so pages into .md files
 
