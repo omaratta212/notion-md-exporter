@@ -1,5 +1,10 @@
 "use strict";
 const env = require('dotenv').config({path: __dirname + '/.env'})
+const http = require('https');
+const fs = require('fs');
+const fetch = require('node-fetch')
+const AdmZip = require('adm-zip');
+
 const token_v2 = env.parsed.TOKEN_V2
 const blogPageId = env.parsed.PARENT_PAGE_ID
 const blockId = `${blogPageId.substring(0,8)}-${blogPageId.substring(8,12)}-${blogPageId.substring(12,16)}-${blogPageId.substring(16,20)}-${blogPageId.substring(20,blogPageId.length)}`
@@ -8,7 +13,6 @@ if(!token_v2 || !blogPageId || !blockId){
     throw new Error('Environment variables are not set correctly!')
 }
 
-const fetch = require('node-fetch')
 const fetchDefaults = {
     headers: {
         "content-type": "application/json",
@@ -56,7 +60,7 @@ const requestExport = async (blockId) => {
     }
 }
 
-const getExportedIfReady = async (taskId) => {
+const getExportedWhenReady = async (taskId) => {
     const options = {
         ...fetchDefaults,
         method: "POST",
@@ -71,7 +75,7 @@ const getExportedIfReady = async (taskId) => {
 
         if (status && status.type === 'progress') {
             await delay(2000)
-            return await getExportedIfReady(taskId)
+            return await getExportedWhenReady(taskId)
         } else if (status && status.type === 'complete') {
             return status['exportURL']
         }
@@ -81,8 +85,25 @@ const getExportedIfReady = async (taskId) => {
 
 }
 
-// (async ()=>{
-//     const taskId = await requestExport(blockId)
-//     console.log(taskId)
-//     console.log(await getExportedIfReady(taskId))
-// })()
+const extractZip = ()=> {
+    const zip = new AdmZip("./content/notionExport.zip");
+    zip.extractAllTo("./content/notion/", true);
+}
+
+(async ()=>{
+    /* Queue Notion task to export the page */
+    const taskId = await requestExport(blockId)
+
+    /* Check the task status and get downloadURL when finished */
+    const downloadURL = await getExportedWhenReady(taskId)
+
+
+    /* Open file stream */
+    const file = fs.createWriteStream("content/notionExport.zip");
+
+    /* Download file and store in the opened stream */
+    http.get(downloadURL,(r)=>{r.pipe(file)})
+
+    /* Extract the zip file to ./content/notion directory */
+    extractZip()
+})()

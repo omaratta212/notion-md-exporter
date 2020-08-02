@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "adm-zip": "^0.4.16",
     "dotenv": "^8.2.0",
     "node-fetch": "^2.6.0"
   }
