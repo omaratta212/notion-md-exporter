@@ -32,5 +32,6 @@
   "bugs": {
     "url": "https://github.com/omaratta212/notion-md-exporter/issues"
   },
-  "homepage": "https://github.com/omaratta212/notion-md-exporter#readme"
+  "homepage": "https://github.com/omaratta212/notion-md-exporter#readme",
+  "publishConfig": { "registry": "https://npm.pkg.github.com/" }
 }
