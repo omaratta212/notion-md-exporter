@@ -1,16 +1,17 @@
 "use strict";
-const env = require('dotenv').config({path: __dirname + '/.env'})
+const env = require('dotenv').config()
 const fs = require('fs');
 const fetch = require('node-fetch')
-const AdmZip = require('adm-zip');
+const AdmZip = require('adm-zip')
 
 const token_v2 = env.parsed.TOKEN_V2
 const blogPageId = env.parsed.PARENT_PAGE_ID
-const blockId = `${blogPageId.substring(0, 8)}-${blogPageId.substring(8, 12)}-${blogPageId.substring(12, 16)}-${blogPageId.substring(16, 20)}-${blogPageId.substring(20, blogPageId.length)}`
+const contentPath = env.parsed.CONTENT_PATH || './content/'
 
-if (!token_v2 || !blogPageId || !blockId) {
-    throw new Error('Environment variables are not set correctly!')
-}
+if (!token_v2 || !blogPageId) throw new Error('Environment variables are not set correctly!')
+
+const blockId = `${blogPageId.substring(0, 8)}-${blogPageId.substring(8, 12)}-${blogPageId.substring(12, 16)}-${blogPageId.substring(16, 20)}-${blogPageId.substring(20, blogPageId.length)}`
+if (!blockId) throw new Error('Environment variables are not set correctly!')
 
 const fetchDefaults = {
     headers: {
@@ -89,26 +90,33 @@ const extractZip = (fileName, path) => {
     zip.extractAllTo(path, true)
 }
 
+
 (async () => {
-    /* Queue Notion task to export the page */
-    const taskId = await requestExport(blockId)
+        /* Queue Notion task to export the page */
+        console.log('Requesting notion export...')
+        const taskId = await requestExport(blockId)
+        console.log('Requesting notion export done.\n Checking if your download is ready...')
 
-    /* Check the task status and get downloadURL when finished */
-    const downloadURL = await getExportedWhenReady(taskId)
+        /* Check the task status and get downloadURL when finished */
+        const downloadURL = await getExportedWhenReady(taskId)
+        console.log('Download is ready.\n downloading...')
 
+        /* Open file stream */
+        const file = fs.createWriteStream("content/notionExport.zip")
 
-    /* Open file stream */
-    const file = fs.createWriteStream("content/notionExport.zip");
+        /* Download file */
+        const response = await fetch(downloadURL)
 
-    /* Download file */
-    const response = await fetch(downloadURL)
+        /* Store in the opened stream */
+        response.body.pipe(file)
 
-    /* Store in the opened stream */
-    response.body.pipe(file)
-
-    response.body.on("finish", () => {
-        /* Extract the zip file to  directory */
-        extractZip('./content/notionExport.zip', './content/notion')
-    })
-
-})()
+        response.body.on("finish", () => {
+            /* Extract the zip file to  directory */
+            console.log('Download done.\n Extracting zip file...')
+            extractZip('./content/notionExport.zip', contentPath)
+            fs.unlink('./content/notionExport.zip', ()=> {
+                console.log('Extracting done.\n and cleared the zip file! have fun')
+            })
+        })
+    }
+)()

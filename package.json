@@ -1,18 +1,36 @@
 {
-  "name": "notion-headless",
-  "version": "1.0.0",
-  "description": "",
+  "name": "notion-md-exporter",
+  "version": "0.1.0",
+  "description": "A small node.js script to export nested notion.so pages into .md files",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "notion",
+    "notion.so",
+    "md",
+    "notion-export",
+    "blog",
+    "notion-blog",
+    "notion-headless",
+    "headless"
+  ],
+  "author": "Omar Atta",
+  "license": "MIT",
   "dependencies": {
     "adm-zip": "^0.4.16",
     "dotenv": "^8.2.0",
     "node-fetch": "^2.6.0"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omaratta212/notion-md-exporter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/omaratta212/notion-md-exporter/issues"
+  },
+  "homepage": "https://github.com/omaratta212/notion-md-exporter#readme"
 }
