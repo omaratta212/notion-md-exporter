@@ -1,15 +1,14 @@
 "use strict";
 const env = require('dotenv').config({path: __dirname + '/.env'})
-const http = require('https');
 const fs = require('fs');
 const fetch = require('node-fetch')
 const AdmZip = require('adm-zip');
 
 const token_v2 = env.parsed.TOKEN_V2
 const blogPageId = env.parsed.PARENT_PAGE_ID
-const blockId = `${blogPageId.substring(0,8)}-${blogPageId.substring(8,12)}-${blogPageId.substring(12,16)}-${blogPageId.substring(16,20)}-${blogPageId.substring(20,blogPageId.length)}`
+const blockId = `${blogPageId.substring(0, 8)}-${blogPageId.substring(8, 12)}-${blogPageId.substring(12, 16)}-${blogPageId.substring(16, 20)}-${blogPageId.substring(20, blogPageId.length)}`
 
-if(!token_v2 || !blogPageId || !blockId){
+if (!token_v2 || !blogPageId || !blockId) {
     throw new Error('Environment variables are not set correctly!')
 }
 
@@ -21,7 +20,7 @@ const fetchDefaults = {
     method: "GET",
 }
 
-const delay = (milliseconds)=> {
+const delay = (milliseconds) => {
     return new Promise(function (resolve, reject) {
         setTimeout(function () {
             resolve("Done");
@@ -85,12 +84,12 @@ const getExportedWhenReady = async (taskId) => {
 
 }
 
-const extractZip = ()=> {
-    const zip = new AdmZip("./content/notionExport.zip");
-    zip.extractAllTo("./content/notion/", true);
+const extractZip = (fileName, path) => {
+    const zip = new AdmZip(fileName)
+    zip.extractAllTo(path, true)
 }
 
-(async ()=>{
+(async () => {
     /* Queue Notion task to export the page */
     const taskId = await requestExport(blockId)
 
@@ -101,9 +100,15 @@ const extractZip = ()=> {
     /* Open file stream */
     const file = fs.createWriteStream("content/notionExport.zip");
 
-    /* Download file and store in the opened stream */
-    http.get(downloadURL,(r)=>{r.pipe(file)})
+    /* Download file */
+    const response = await fetch(downloadURL)
 
-    /* Extract the zip file to ./content/notion directory */
-    extractZip()
+    /* Store in the opened stream */
+    response.body.pipe(file)
+
+    response.body.on("finish", () => {
+        /* Extract the zip file to  directory */
+        extractZip('./content/notionExport.zip', './content/notion')
+    })
+
 })()
